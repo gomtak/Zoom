@@ -29,7 +29,7 @@ wss.on("connection", (socket) => {
         // console.log(message.toString('ascii'));
         sockets.forEach(aSocket => aSocket.send(message.toString('ascii')));
     });
-    socket.send("hello!!!!!!!");
+    // socket.send("hello!!!!!!!");
 })
 
 server.listen(3000, handleListen);

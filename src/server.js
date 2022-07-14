@@ -2,7 +2,8 @@ import http from "http";
 // import WebSocket from "ws";
 import express, { application } from "express";
 import { SocketAddress } from "net";
-import SocketIO from "socket.io";
+import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 
 const app = express();
 
@@ -17,7 +18,17 @@ const handleListen = () => console.log('Listening on http://localhost:3000');
 // app.listen(3000, handleListen); express 는 웹소캣을 지원하지 않기 때문에 아래와 같이 변경해서 같이 쓸수 있게 만든다.
 
 const httpServer = http.createServer(app);
-const wsServer = SocketIO(httpServer);
+const wsServer = new Server(httpServer ,{
+    cors: {
+        origin: ["https://admin.socket.io"],
+        credentials: true
+    }
+});
+
+
+instrument(wsServer, {
+    auth: false
+});
 
 function publicRooms(){
     const {
@@ -36,6 +47,12 @@ function publicRooms(){
     // const sids = wsServer.sockets.adapter.sids;
     // const rooms = wsServer.sockets.adapter.rooms;
 }
+
+function countRoom(roomName) {
+    console.log(wsServer.sockets.adapter.rooms.get(roomName)?.size)
+    return wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 wsServer.on("connection", socket => {
     socket.onAny((event) => {
         console.log(wsServer.sockets.adapter);
@@ -45,14 +62,16 @@ wsServer.on("connection", socket => {
         socket.join(roomName);
         done();
         socket.to(roomName).emit("welcome");
-        wsServer.sockets.emit("room_change", publicRooms());
+        wsServer.sockets.emit("room_change", publicRooms(), countRoom(roomName));
     })
     socket.on("disconnecting", () => {
         socket.rooms.forEach(room => socket.to(room).emit("bye"));
         // wsServer.sockets.emit("room_change", publicRooms());
     });
     socket.on("disconnect", () => {
-        wsServer.sockets.emit("room_change", publicRooms());
+        socket.rooms.forEach((room) =>
+        wsServer.sockets.emit("room_change", publicRooms(), countRoom(roomName) - 1)
+        );
     });
     socket.on("new_message", (msg, room, done) => {
         socket.to(room).emit("new_message", msg);

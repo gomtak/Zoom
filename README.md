@@ -10,3 +10,7 @@ Zoom Clone using NodeJS WebRTC and Websockets.
 * server.js 파일은 express를 import하고, 뷰 엔진을 설정하며, 뷰 디렉토리를 설정한다.
 * /public 파일은 프론트에서 구동되는 코드 app.js // server.js로 구분한다.
 * babel-node를 실행시키면 babel.config.json을 찾는다. 그리고 거기에 preset을 실행시킨다.
+
+* 아래를 설치 하면 Ui로 소켓 현황을 볼 수 있다.
+  * npm i @socket.io/admin-ui
+* https://admin.socket.io 에 접속해서 나의 주소를 입력한 후 ui로 확인가능.

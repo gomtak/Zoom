@@ -24,13 +24,16 @@ wsServer.on("connection", socket => {
         console.log(`Socket Event:${event}`)
     })
     socket.on("enter_room", (roomName, done) => {
+        console.log(roomName);
+        console.log(socket.id);
         socket.join(roomName);
         done();
+        socket.to(roomName).emit("welcome");
     })
 })
 
 
-
+ 
 // const wss = new WebSocket.Server({server});
 // const sockets = [];
 // wss.on("connection", (socket) => {

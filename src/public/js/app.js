@@ -48,4 +48,19 @@ socket.on("welcome", () => {
 socket.on("bye", ()=>{
     addMessage("Someone left ㅜㅜ");
 });
-socket.on("new_message", addMessage)
+socket.on("new_message", addMessage);
+
+socket.on("room_change", (rooms) => {
+    const roomList = welcome.querySelector('ul');
+    if(rooms.length===0){
+        roomList.innerHTML = "";
+        return;    
+    }
+    console.log(rooms);
+    
+    rooms.forEach(room => {
+        const li = document.createElement('li');
+        li.innerText = room;
+        roomList.append(li);
+    });
+});

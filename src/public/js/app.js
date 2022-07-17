@@ -14,6 +14,7 @@ let myStream;
 let muted = false;
 let cameraOff = false;
 let roomName;
+let myPeerConnection;
 async function getCameras(){
     try {
         const devices = await navigator.mediaDevices.enumerateDevices()
@@ -101,16 +102,18 @@ cameraSelect.addEventListener("input",handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-function startMedia(){
+async function initCall(){
     welcome.hidden = true;
     call.hidden = false;
-    getMedia();
+    await getMedia();
+    makeConnection();
 }
 
-function handleWelcomeSubmit(event) {
+async function handleWelcomeSubmit(event) {
     event.preventDefault();
     const input = welcomeForm.querySelector("input");
-    socket.emit("join_room", input.value, startMedia);
+    await initCall();
+    socket.emit("join_room", input.value);
     roomName = input.value;
     input.value = "";
 }
@@ -119,6 +122,27 @@ welcomeForm.addEventListener("submit",handleWelcomeSubmit);
 
 // Socket code
 
-socket.on("welcome", () => {
-    console.log("some on joined!");
+socket.on("welcome", async () => {
+    const offer = await myPeerConnection.createOffer();
+    myPeerConnection.setLocalDescription(offer);
+    console.log("send the offer");
+    socket.emit("offer", offer, roomName);
 })
+
+socket.on("offer", async (offer) => {
+    myPeerConnection.setRemoteDescription(offer);
+    const answer = await myPeerConnection.createAnswer();
+    myPeerConnection.setRemoteDescription(answer);
+    socket.emit("answer", answer, roomName);
+})
+
+socket.on("answer", answer => {
+    myPeerConnection.setRemoteDescription(answer);
+})
+// RTC Code addStream 대신에 사용하는 것.
+function makeConnection(){
+    myPeerConnection = new RTCPeerConnection();
+    myStream
+        .getTracks()
+        .forEach(track => myPeerConnection.addTrack(track, myStream));
+}
